@@ -1,85 +1,79 @@
-import { useState } from "react";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz Bowl Buzz Point Simulator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="transition-colors duration-300 bg-white text-black" id="mainBody">
 
-export default function QuizBowlBuzzPoint() {
-  const [tossup, setTossup] = useState("");
-  const [celerity, setCelerity] = useState("");
-  const [buzzPoint, setBuzzPoint] = useState(null);
-  const [darkMode, setDarkMode] = useState(false);
-  const [htmlContent, setHtmlContent] = useState(null);
-
-  const handleSubmit = () => {
-    const cleanTossup = tossup.trim();
-    const words = cleanTossup.split(/\s+/);
-    const celerityVal = Math.min(Math.max(parseFloat(celerity), 0), 1);
-    const buzzIndex = Math.floor((1 - celerityVal) * words.length);
-    const buzzedText = words.slice(0, buzzIndex).join(" ");
-    setBuzzPoint({ buzzIndex, buzzedText });
-  };
-
-  const fetchHtml = async () => {
-    try {
-      const response = await fetch("https://api.allorigins.win/get?url=" + encodeURIComponent("https://www.qbreader.org/database/?queryString=For+10+points%2C+what+namesake+%5C%22number%5C%22+determines+if+a+flow+is+laminar+or+turbulent%3F"));
-      const data = await response.json();
-      setHtmlContent(data.contents);
-    } catch (err) {
-      setHtmlContent("Failed to fetch HTML: " + err.message);
-    }
-  };
-
-  return (
-    <div className={
-      `p-4 max-w-3xl mx-auto min-h-screen transition-colors duration-300 ${
-        darkMode ? "bg-[#1c1a2b] text-gray-200" : "bg-white text-black"
-      }`
-    }>
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Quiz Bowl Buzz Point Simulator</h1>
-        <Button variant="outline" onClick={() => setDarkMode(!darkMode)}>
-          {darkMode ? "Light Mode" : "Dark Mode"}
-        </Button>
-      </div>
-
-      <Card className="mb-4">
-        <CardContent className="space-y-4 p-4">
-          <Textarea
-            placeholder="Enter your tossup text here"
-            rows={8}
-            value={tossup}
-            onChange={(e) => setTossup(e.target.value)}
-          />
-          <Input
-            type="number"
-            step="0.01"
-            min="0"
-            max="1"
-            placeholder="Enter a celerity value (0 to 1)"
-            value={celerity}
-            onChange={(e) => setCelerity(e.target.value)}
-          />
-          <Button onClick={handleSubmit}>Simulate Buzz</Button>
-          <Button variant="secondary" onClick={fetchHtml}>Fetch Tossup HTML</Button>
-        </CardContent>
-      </Card>
-
-      {buzzPoint && (
-        <Card>
-          <CardContent className="p-4 space-y-2">
-            <p className="text-lg font-medium">Buzz occurred at word #{buzzPoint.buzzIndex}</p>
-            <p className="italic">"{buzzPoint.buzzedText}..."</p>
-          </CardContent>
-        </Card>
-      )}
-
-      {htmlContent && (
-        <Card className="mt-4">
-          <CardContent className="p-4 overflow-auto text-sm">
-            <pre>{htmlContent}</pre>
-          </CardContent>
-        </Card>
-      )}
+  <div class="p-4 max-w-3xl mx-auto min-h-screen">
+    <div class="flex justify-between items-center mb-4">
+      <h1 class="text-2xl font-bold">Quiz Bowl Buzz Point Simulator</h1>
+      <button id="toggleMode" class="border px-4 py-2 rounded">Dark Mode</button>
     </div>
-  );
+
+    <div class="border rounded mb-4 bg-white dark:bg-[#1c1a2b] dark:text-gray-200">
+      <div class="p-4 space-y-4">
+        <textarea id="tossupInput" placeholder="Enter your tossup text here" rows="8" class="w-full p-2 border rounded"></textarea>
+        <input id="celerityInput" type="number" step="0.01" min="0" max="1" placeholder="Enter a celerity value (0 to 1)" class="w-full p-2 border rounded" />
+        <button id="simulateBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Simulate Buzz</button>
+        <button id="fetchHtmlBtn" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">Fetch Tossup HTML</button>
+      </div>
+    </div>
+
+    <div id="buzzOutput" class="hidden border rounded p-4 space-y-2 bg-white dark:bg-[#1c1a2b] dark:text-gray-200"></div>
+    <div id="htmlOutput" class="hidden border rounded p-4 mt-4 overflow-auto text-sm bg-white dark:bg-[#1c1a2b] dark:text-gray-200"><pre></pre></div>
+  </div>
+
+  <script>
+    const toggleBtn = document.getElementById("toggleMode");
+    const body = document.getElementById("mainBody");
+    let darkMode = false;
+
+    toggleBtn.addEventListener("click", () => {
+      darkMode = !darkMode;
+      if (darkMode) {
+        body.classList.add("bg-[#1c1a2b]", "text-gray-200");
+        body.classList.remove("bg-white", "text-black");
+        toggleBtn.textContent = "Light Mode";
+      } else {
+        body.classList.add("bg-white", "text-black");
+        body.classList.remove("bg-[#1c1a2b]", "text-gray-200");
+        toggleBtn.textContent = "Dark Mode";
+      }
+    });
+
+    document.getElementById("simulateBtn").addEventListener("click", () => {
+      const tossup = document.getElementById("tossupInput").value.trim();
+      const celerity = parseFloat(document.getElementById("celerityInput").value);
+      if (isNaN(celerity) || celerity < 0 || celerity > 1) return alert("Celerity must be between 0 and 1");
+
+      const words = tossup.split(/\s+/);
+      const buzzIndex = Math.floor((1 - celerity) * words.length);
+      const buzzedText = words.slice(0, buzzIndex).join(" ");
+
+      const output = document.getElementById("buzzOutput");
+      output.innerHTML = `
+        <p class="text-lg font-medium">Buzz occurred at word #${buzzIndex}</p>
+        <p class="italic">"${buzzedText}..."</p>
+      `;
+      output.classList.remove("hidden");
+    });
+
+    document.getElementById("fetchHtmlBtn").addEventListener("click", async () => {
+      const output = document.getElementById("htmlOutput");
+      const pre = output.querySelector("pre");
+      try {
+        const response = await fetch("https://api.allorigins.win/get?url=" + encodeURIComponent("https://www.qbreader.org/database/?queryString=For+10+points%2C+what+namesake+%22number%22+determines+if+a+flow+is+laminar+or+turbulent%3F"));
+        const data = await response.json();
+        pre.textContent = data.contents;
+      } catch (err) {
+        pre.textContent = "Failed to fetch HTML: " + err.message;
+      }
+      output.classList.remove("hidden");
+    });
+  </script>
+</body>
+</html>
